@@ -4,30 +4,59 @@ import type { CSSProperties } from "react";
 import type { FooterState } from "../types";
 
 function box(state: FooterState): CSSProperties {
-  return { width: state.width, minHeight: state.height, padding: state.padding, margin: state.margin, gap: state.gap, borderRadius: state.radius, border: `${state.borderWidth}px solid ${state.border}`, boxShadow: `0 ${Math.round(state.shadow / 3)}px ${state.shadow}px rgba(0,0,0,.28)`, background: state.background, color: state.foreground, fontFamily: state.fontFamily };
+  return {
+    width: state.width,
+    minHeight: state.height,
+    padding: state.padding,
+    margin: state.margin,
+    gap: state.gap,
+    borderRadius: state.radius,
+    border: `${state.borderWidth}px solid ${state.border}`,
+    boxShadow: `0 ${Math.round(state.shadow / 3)}px ${state.shadow}px rgba(0,0,0,.28)`,
+    background: state.background,
+    color: state.foreground,
+    fontFamily: state.fontFamily,
+    transition: state.motion ? "all 180ms ease" : undefined,
+  };
 }
 
 export default function LivePreview({ state }: { state: FooterState }) {
-  const model = state as Record<string, unknown>;
-  const numberValue = (key: string, fallback: number) => typeof model[key] === "number" ? model[key] : fallback;
-  const stringValue = (key: string, fallback: string) => typeof model[key] === "string" ? model[key] : fallback;
-  const boolValue = (key: string, fallback = false) => typeof model[key] === "boolean" ? model[key] : fallback;
-  const count = numberValue("itemCount", numberValue("navCount", numberValue("linkCount", numberValue("columnCount", 4))));
-  const items = Array.from({ length: count }, (_, index) => index + 1);
+  const columns = Array.from({ length: state.columnCount }, (_, index) => `Column ${index + 1}`);
+  const links = Array.from({ length: state.linkCount }, (_, index) => `Link ${index + 1}`);
   const style = box(state);
-  if (stringValue("role", "") === "separator" || "orientation" in model) {
-    const orientation = stringValue("orientation", "horizontal") as "horizontal" | "vertical";
-    const length = numberValue("length", state.width);
-    const thickness = numberValue("thickness", state.borderWidth || 1);
-    return <div role={boolValue("decorative") ? "presentation" : "separator"} aria-orientation={orientation} style={{ ...style, minHeight: orientation === "vertical" ? length : thickness, width: orientation === "vertical" ? thickness : length, padding: 0, background: state.accent }} />;
-  }
-  if ("axis" in model) {
-    const axis = stringValue("axis", "block");
-    const size = numberValue("size", 72);
-    const thickness = numberValue("thickness", 1);
-    return <div aria-hidden={boolValue("decorative")} role={boolValue("decorative") ? "presentation" : "separator"} style={{ ...style, minHeight: axis === "inline" ? thickness : size, width: axis === "block" ? "100%" : size, display: "grid", placeItems: "center" }}>{boolValue("debugVisible") ? stringValue("token", "space") : ""}</div>;
-  }
-  const gridColumns = "columns" in model ? `repeat(${numberValue("columns", 3)}, minmax(0, 1fr))` : undefined;
-  const isFlex = "direction" in model;
-  return <section id={state.id} role={state.role === "presentation" ? undefined : state.role} aria-label={state.landmarkLabel} tabIndex={state.tabIndex} style={style} className="grid content-center"><h3 style={{ fontSize: state.titleSize, fontWeight: state.fontWeight }}>{state.title}</h3><p style={{ color: state.muted, fontSize: state.bodySize }}>{state.description}</p><div className="grid gap-3" style={{ gridTemplateColumns: gridColumns, display: isFlex ? "flex" : undefined, flexDirection: isFlex ? stringValue("direction", "row") as CSSProperties["flexDirection"] : undefined, flexWrap: "wrap" in model ? stringValue("wrap", "wrap") as CSSProperties["flexWrap"] : undefined, justifyContent: "justify" in model ? stringValue("justify", "center") as CSSProperties["justifyContent"] : undefined, alignItems: "align" in model ? stringValue("align", "stretch") as CSSProperties["alignItems"] : undefined }}>{items.map((item) => <div key={item} className="rounded-xl border p-3" style={{ borderColor: state.border, background: "rgba(255,255,255,.06)" }}>Item {item}</div>)}</div></section>;
+  const compact = state.previewState === "collapsed" || state.previewState === "mobile";
+
+  return (
+    <footer id={state.id} aria-label={state.landmarkLabel} tabIndex={state.tabIndex} style={style}>
+      <div className="grid" style={{ gap: state.gap }}>
+        <section aria-labelledby={`${state.id}-brand`} className="grid" style={{ gap: Math.max(8, state.gap / 2) }}>
+          <h2 id={`${state.id}-brand`} style={{ fontSize: state.titleSize, fontWeight: state.fontWeight }}>{state.title}</h2>
+          <p style={{ color: state.muted, fontSize: state.bodySize, maxWidth: 620 }}>{state.description}</p>
+          {state.showNewsletter && (
+            <form className="flex flex-wrap" style={{ gap: Math.max(8, state.gap / 2) }} onSubmit={(event) => event.preventDefault()}>
+              <label className="sr-only" htmlFor={`${state.id}-email`}>Email address</label>
+              <input id={`${state.id}-email`} type="email" placeholder="you@example.com" className="rounded-full border px-4 py-2 text-sm" style={{ borderColor: state.border, background: "transparent", color: state.foreground }} />
+              <button type="submit" className="rounded-full px-4 py-2 text-sm font-semibold" style={{ background: state.accent, color: state.background }}>Subscribe</button>
+            </form>
+          )}
+        </section>
+        <nav aria-label={`${state.landmarkLabel} links`} className="grid" style={{ gap: state.gap, gridTemplateColumns: compact ? "1fr" : `repeat(${state.columnCount}, minmax(0, 1fr))` }}>
+          {columns.map((column, columnIndex) => (
+            <section key={column} aria-labelledby={`${state.id}-column-${columnIndex}`} className="grid content-start" style={{ gap: Math.max(6, state.gap / 2) }}>
+              <h3 id={`${state.id}-column-${columnIndex}`} className="text-xs uppercase tracking-[0.16em]" style={{ color: state.accent }}>{column}</h3>
+              {links.filter((_, index) => index % columns.length === columnIndex).map((link, linkIndex) => (
+                <a key={link} href="#" aria-current={state.previewState === "active" && columnIndex === 0 && linkIndex === 0 ? "page" : undefined} className="text-sm" style={{ color: state.previewState === "hover" && linkIndex === 0 ? state.foreground : state.muted }}>
+                  {link}
+                </a>
+              ))}
+            </section>
+          ))}
+        </nav>
+        <div className="flex flex-wrap items-center justify-between border-t pt-4" style={{ borderColor: state.border, gap: state.gap }}>
+          {state.showLegal && <small style={{ color: state.muted }}>Copyright 2026 {state.title}. Privacy, Terms, Security.</small>}
+          {state.showSocial && <nav aria-label={`${state.landmarkLabel} social links`} className="flex" style={{ gap: Math.max(8, state.gap / 2) }}>{["X", "In", "Git"].map((item) => <a key={item} href="#" className="rounded-full border px-3 py-2 text-sm font-semibold" style={{ borderColor: state.border, color: state.foreground }}>{item}</a>)}</nav>}
+        </div>
+      </div>
+    </footer>
+  );
 }
