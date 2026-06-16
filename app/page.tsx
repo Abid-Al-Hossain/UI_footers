@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import AppShell from "@/components/shared/layout/AppShell";
 import { PlaygroundLayout } from "@/components/shared/layout/PlaygroundLayout";
+import { useHistoryState } from "@/components/hooks/useHistoryState";
+import UndoRedoButtons from "@/components/shared/layout/UndoRedoButtons";
 import SectionSelector from "@/components/shared/layout/SectionSelector";
 import { SharedPreviewDownloadPanel } from "@/components/shared/layout/SharedPreviewDownloadPanel";
 import type { PreviewCanvasMode } from "@/components/shared/layout/PreviewPanel";
@@ -27,7 +29,7 @@ import AccessibilitySection from "./_section/AccessibilitySection";
 import { SECTIONS, type SectionId, type FooterState, type StudioPreset } from "./types";
 
 export default function Page() {
-  const [state, setState] = useState<FooterState>(DEFAULT_FOOTER_STATE);
+  const { state, set: setState, undo, redo, reset, canUndo, canRedo } = useHistoryState<FooterState>(DEFAULT_FOOTER_STATE);
   const [activeSection, setActiveSection] = useState<SectionId>("presets");
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [downloadName] = useState("footers-component");
@@ -40,5 +42,13 @@ export default function Page() {
   const preview = useMemo(() => <LivePreview key={previewResetKey} state={state} />, [previewResetKey, state]);
   const controls = <><SectionSelector sections={SECTIONS} active={activeSection} onChange={setActiveSection} />{activeSection === "presets" && <PresetsSection activePresetId={activePresetId} onApply={applyPreset} />}{activeSection === "basics" && <BasicsSection state={state} update={update} />}{activeSection === "metadata" && <MetadataSection state={state} update={update} />}{activeSection === "structure" && <StructureSection state={state} update={update} />}{activeSection === "layout" && <LayoutSection state={state} update={update} />}{activeSection === "sizing" && <SizingSection state={state} update={update} />}{activeSection === "spacing" && <SpacingSection state={state} update={update} />}{activeSection === "surface" && <SurfaceSection state={state} update={update} />}{activeSection === "colors" && <ColorsSection state={state} update={update} />}{activeSection === "border" && <BorderSection state={state} update={update} />}{activeSection === "radius" && <RadiusSection state={state} update={update} />}{activeSection === "shadow" && <ShadowSection state={state} update={update} />}{activeSection === "typography" && <TypographySection state={state} update={update} />}{activeSection === "states" && <StatesSection state={state} update={update} />}{activeSection === "accessibility" && <AccessibilitySection state={state} update={update} />}</>;
   const output = <SharedPreviewDownloadPanel preview={preview} code={exportPayload.content} downloadName={downloadName} previewBgMode={previewBgMode} previewBgInput={previewBgInput} onPreviewBgMode={setPreviewBgMode} onPreviewBgInput={setPreviewBgInput} />;
-  return <AppShell contentOverflow="hidden"><PlaygroundLayout title="Footer Studio" controls={controls} preview={output} /></AppShell>;
+  const handleReset = () => {
+    reset();
+    setPreviewResetKey((value) => value + 1);
+  };
+  const headerActions = (
+    <UndoRedoButtons undo={undo} redo={redo} reset={handleReset} canUndo={canUndo} canRedo={canRedo} />
+  );
+
+  return <AppShell contentOverflow="hidden"><PlaygroundLayout title="Footer Studio" headerActions={headerActions} controls={controls} preview={output} /></AppShell>;
 }

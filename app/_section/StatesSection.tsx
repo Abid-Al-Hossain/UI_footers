@@ -24,11 +24,13 @@ export default function StatesSection({ state, update }: Props) {
 ]} onChange={(value) => update("previewState", value)} />
       </SectionCard>
       <SectionCard title="Hover" subtitle="Real hover state for clickable footer banners.">
+      <div className="space-y-4">
         <Switch label="Enabled" checked={state.hoverEnabled} onChange={(value) => update("hoverEnabled", value)} />
         <ColorControl label="Hover background" value={state.hoverBg} onChange={(v) => update("hoverBg", v)} />
         <ColorControl label="Hover border" value={state.hoverBorder} onChange={(v) => update("hoverBorder", v)} />
         <Input label="Hover shadow (CSS box-shadow)" value={state.hoverShadow} onChange={(v) => update("hoverShadow", v)} />
-      </SectionCard>
+      </div>
+    </SectionCard>
     </div>
   );
 }
