@@ -3,12 +3,17 @@
 import { SectionCard } from "@/components/shared/layout/SectionCard";
 import Select from "@/components/shared/input/Select";
 import Switch from "@/components/shared/input/Switch";
+import ColorControl from "@/components/shared/color/ColorControl";
+import Input from "@/components/shared/input/Input";
 import type { FooterState } from "../types";
 
 type Props = { state: FooterState; update: <K extends keyof FooterState>(key: K, value: FooterState[K]) => void };
 
 export default function StatesSection({ state, update }: Props) {
-  return <SectionCard title="State Preview" subtitle="State Preview controls for native layout/page-structure generation."><Select label="Preview state" value={state.previewState} options={[
+  return (
+    <div className="space-y-4">
+      <SectionCard title="State Preview" subtitle="State Preview controls for native layout/page-structure generation.">
+        <Select label="Preview state" value={state.previewState} options={[
   "default",
   "hover",
   "focus",
@@ -17,5 +22,13 @@ export default function StatesSection({ state, update }: Props) {
   "mobile",
   "overflow"
 ]} onChange={(value) => update("previewState", value)} />
-</SectionCard>;
+      </SectionCard>
+      <SectionCard title="Hover" subtitle="Real hover state for clickable footer banners.">
+        <Switch label="Enabled" checked={state.hoverEnabled} onChange={(value) => update("hoverEnabled", value)} />
+        <ColorControl label="Hover background" value={state.hoverBg} onChange={(v) => update("hoverBg", v)} />
+        <ColorControl label="Hover border" value={state.hoverBorder} onChange={(v) => update("hoverBorder", v)} />
+        <Input label="Hover shadow (CSS box-shadow)" value={state.hoverShadow} onChange={(v) => update("hoverShadow", v)} />
+      </SectionCard>
+    </div>
+  );
 }

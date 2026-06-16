@@ -58,7 +58,11 @@ export const DEFAULT_FOOTER_STATE: FooterState = {
   "showNewsletter": true,
   "showSocial": true,
   "showLegal": true,
-  "linkCount": 6
+  "linkCount": 6,
+  "hoverEnabled": false,
+  "hoverBg": "rgba(56,189,248,0.06)",
+  "hoverBorder": "#38bdf8",
+  "hoverShadow": "0 12px 24px rgba(0,0,0,0.25)"
 };
 
 export const FOOTER_PRESETS: StudioPreset[] = [

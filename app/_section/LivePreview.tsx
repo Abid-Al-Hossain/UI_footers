@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import type { FooterState } from "../types";
 import { SYSTEM_FONTS } from "@/components/shared/typography/fontConstants";
 
@@ -47,11 +47,19 @@ function box(state: FooterState): CSSProperties {
 export default function LivePreview({ state }: { state: FooterState }) {
   const columns = Array.from({ length: state.columnCount }, (_, index) => `Column ${index + 1}`);
   const links = Array.from({ length: state.linkCount }, (_, index) => `Link ${index + 1}`);
-  const style = box(state);
+  const [isHovered, setIsHovered] = useState(false);
+  const hovered = state.hoverEnabled && isHovered;
+  const baseStyle = box(state);
+  const style: CSSProperties = {
+    ...baseStyle,
+    background: hovered ? state.hoverBg : baseStyle.background,
+    borderColor: hovered ? state.hoverBorder : state.border,
+    boxShadow: hovered ? state.hoverShadow : baseStyle.boxShadow,
+  };
   const compact = state.previewState === "collapsed" || state.previewState === "mobile";
 
   return (
-    <footer id={state.id} aria-label={state.landmarkLabel} tabIndex={state.tabIndex} style={style}>
+    <footer id={state.id} aria-label={state.landmarkLabel} tabIndex={state.tabIndex} style={style} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <div className="grid" style={{ gap: state.gap }}>
         <section aria-labelledby={`${state.id}-brand`} className="grid" style={{ gap: Math.max(8, state.gap / 2) }}>
           <h2 id={`${state.id}-brand`} style={{ fontSize: state.titleSize, fontWeight: state.fontWeight }}>{state.title}</h2>
